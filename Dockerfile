@@ -1,22 +1,21 @@
-FROM node:20-alpine AS development-dependencies-env
-COPY . /app
-WORKDIR /app
-RUN npm ci
+# Frontend Dockerfile
 
-FROM node:20-alpine AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
+FROM node:20-bookworm-slim
 WORKDIR /app
-RUN npm ci --omit=dev
 
-FROM node:20-alpine AS build-env
-COPY . /app/
-COPY --from=development-dependencies-env /app/node_modules /app/node_modules
-WORKDIR /app
-RUN npm run build
+# Install pnpm
+RUN npm install -g pnpm
 
-FROM node:20-alpine
-COPY ./package.json package-lock.json /app/
-COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/build /app/build
-WORKDIR /app
-CMD ["npm", "run", "start"]
+# Copy package files and install dependencies
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+# Copy source code and build
+COPY . .
+RUN pnpm run build
+
+# Expose port
+EXPOSE 3000
+
+# Start the application
+CMD ["pnpm", "run", "start"] 
