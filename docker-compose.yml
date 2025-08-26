@@ -1,13 +1,11 @@
-version: "3.8"
-
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: learnbetterauth
-    environment:
-      - NODE_ENV=production
+    env_file:
+      - .env
     expose:
       - "3000"
     restart: unless-stopped
